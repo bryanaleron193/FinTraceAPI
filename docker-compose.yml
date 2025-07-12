@@ -1,0 +1,107 @@
+version: "3.8"
+
+x-linux-container-environment:
+  &common-linux-container-environment-variables
+  TZ: ${TZ}
+  # 1000 is the default main user uid/gid, using it as a sane default value
+  APP_UID: ${APP_UID:-1000}
+  APP_GID: ${APP_GID:-1000}
+
+x-gin-app-environment:
+
+  &common-gin-app-environment-variables
+  TZ: ${TZ}
+  APPLICATION_ENVIRONMENT: ${APPLICATION_ENVIRONMENT}
+  # 1000 is the default main user uid/gid, using it as a sane default value
+  APP_UID: ${APP_UID:-1000}
+  APP_GID: ${APP_GID:-1000}
+  API_PORT: ${API_PORT}
+  API_PORT_INTERNAL: ${API_PORT_INTERNAL}
+  POSTGRES_HOST: ${POSTGRES_HOST}
+  POSTGRES_PORT: ${POSTGRES_PORT}
+  POSTGRES_USER: ${POSTGRES_USER}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  POSTGRES_DB: ${POSTGRES_DB}
+  SECRET_KEY: ${SECRET_KEY}
+  SMTP_USER: ${SMTP_USER}
+  SMTP_PASSWORD: ${SMTP_PASSWORD}
+  EMAILS_FROM_EMAIL: ${EMAILS_FROM_EMAIL}
+  SMTP_PORT: ${SMTP_PORT}
+  SMTP_HOST: ${SMTP_HOST}
+  EMAILS_FROM_NAME: ${EMAILS_FROM_NAME}
+  MAIL_TLS: ${MAIL_TLS}
+  
+services:
+
+  # Gin application
+  todo-api:
+    image: "todo-api:latest"
+    ports:
+      - ${API_PORT}:${API_PORT_INTERNAL}
+    environment:
+      <<: *common-gin-app-environment-variables
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    volumes:
+      - ./backend/:/app
+    depends_on:
+      - todo-postgres
+    restart: unless-stopped
+
+
+  # Postgres database, data is persisted in a volume
+  todo-postgres:
+    image: "postgres:14.5-alpine"
+    environment:
+      <<: *common-linux-container-environment-variables
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - ${POSTGRES_PORT}:${POSTRGRES_PORT_INTERNAL}
+    volumes:
+      - todo-postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  # PGAdmin to view and control the database
+  todo-pgadmin:
+    image: "dpage/pgadmin4:8.11"
+    depends_on:
+      - todo-postgres
+    ports:
+      - ${PGADMIN_PORT}:80
+    environment:
+      <<: *common-linux-container-environment-variables
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+      # PGADMIN_DEFAULT_PASSWORD_FILE: ${PGADMIN_DEFAULT_PASSWORD_FILE}
+      # PGADMIN_CONFIG_SERVER_MODE: 'False'
+      # PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+      # disable spamming all the screen with logs
+      GUNICORN_ACCESS_LOGFILE: /dev/null
+    restart: unless-stopped
+
+  # Fake smtp server to intercept and view sent emails
+  todo-mailhog:
+    image: "mailhog/mailhog:v1.0.1"
+    ports:
+      - ${MAILHOG_PORT}:${MAILHOG_PORT_INTERNAL}
+    environment:
+      <<: *common-linux-container-environment-variables
+    restart: unless-stopped
+
+  # Proxy to add TLS encryption on development env, because gomail needs TLS
+  todo-stunnel:
+    image: dweomer/stunnel
+    restart: always
+    environment:
+      - STUNNEL_SERVICE=smtps
+      - STUNNEL_ACCEPT=465
+      - STUNNEL_CONNECT=todo-mailhog:1025
+    ports:
+      - 465:465 
+
+volumes:
+  todo-postgres-data:
+    name: ${POSTGRES_STORAGE_VOLUME_NAME}

@@ -51,16 +51,16 @@ Build (or rebuild) the containers and launch all services:
 docker-compose up --build --force-recreate
 ```
 
-Execute a command inside a running container for service todo-my-service (here are a running a /bin/sh inside todo-api container):
+Execute a command inside a running container for service fintrace-service (here are a running a /bin/sh inside fintrace-api container):
 
 ```
-docker-compose exec todo-api /bin/sh
+docker-compose exec fintrace-api /bin/sh
 ```
 
-Run tests inside todo-api container:
+Run tests inside fintrace-api container:
 
 ```
-docker-compose exec todo-api go test ./internal/tests/api_tests/
+docker-compose exec fintrace-api go test ./internal/tests/api_tests/
 ```
 
 Generate documentation Swagger:
@@ -73,5 +73,5 @@ swag init
 Or generate documentation Swagger in running api container:
 
 ```
-docker-compose exec todo-api swag init
+docker-compose exec fintrace-api swag init
 ```

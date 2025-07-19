@@ -4,17 +4,12 @@ import (
 	"fmt"
 	"log"
 	"simple-gin-backend/internal/config"
-	"simple-gin-backend/internal/models"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 var DB *gorm.DB
-
-func AutoMigrate() {
-	DB.AutoMigrate(&models.Item{}, &models.User{})
-}
 
 func InitDB() {
 	dsn := fmt.Sprintf(

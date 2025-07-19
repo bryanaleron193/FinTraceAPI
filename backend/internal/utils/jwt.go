@@ -1,21 +1,23 @@
 package utils
 
 import (
-	"time"
-	"github.com/golang-jwt/jwt/v5"
 	"os"
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 // CustomClaims represents the JWT claims
 type CustomClaims struct {
-	UserID uint `json:"user_id"`
+	UserID uuid.UUID `json:"user_id"`
 	jwt.RegisteredClaims
 }
 
 // GenerateJWT generates a JWT for a user
-func GenerateJWT(userID uint) (string, error) {
-	// Define JWT expiration time (e.g., 72 hours)
-	expirationTime := time.Now().Add(72 * time.Hour)
+func GenerateJWT(userID uuid.UUID) (string, error) {
+	// Define JWT expiration time (e.g., 1 hour)
+	expirationTime := time.Now().Add(time.Hour)
 
 	// Create the JWT claims, which includes the user ID and expiry time
 	claims := &CustomClaims{

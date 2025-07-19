@@ -22,7 +22,6 @@ func RegisterRoutes(router *gin.Engine) {
 	router.GET("/", controllers.GetHelloWorld)
 	router.POST("/send-test-email", controllers.PostSendEmail)
 
-	router.POST("/sign-up", controllers.RegisterUser)
 	router.POST("/login", controllers.LoginUser)
 
 	// Protected routes (Require authentication)
@@ -30,10 +29,10 @@ func RegisterRoutes(router *gin.Engine) {
 	api.Use(middleware.JWTAuthMiddleware())
 	{
 		// CRUD Routes for items
-		api.POST("/items", controllers.CreateItem)
-		api.GET("/items/:id", controllers.GetItem)
-		api.PUT("/items/:id", controllers.UpdateItem)
-		api.DELETE("/items/:id", controllers.DeleteItem)
-		api.GET("/items", controllers.GetItems)
+		// api.POST("/items", controllers.CreateItem)
+		// api.GET("/items/:id", controllers.GetItem)
+		// api.PUT("/items/:id", controllers.UpdateItem)
+		// api.DELETE("/items/:id", controllers.DeleteItem)
+		// api.GET("/items", controllers.GetItems)
 	}
 }

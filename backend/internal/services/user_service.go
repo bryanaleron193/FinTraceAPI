@@ -5,26 +5,65 @@ import (
 	"simple-gin-backend/internal/database"
 	"simple-gin-backend/internal/models"
 	"simple-gin-backend/internal/schemas"
-	"simple-gin-backend/internal/utils"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
 )
 
-func FindUser(googleID string) (*models.MsUser, error) {
+func FindUserByGoogleID(googleID string) (*models.MsUser, error) {
 	user := &models.MsUser{}
 
 	var query = database.DB.
 		Model(&models.MsUser{}).
-		Where("google_id = ? and is_deleted = ?", googleID, false).
+		Where("google_id = ?", googleID).
 		First(user)
 
 	// Find the user in the database by email
 	if err := query.Error; err != nil {
-		return nil, fmt.Errorf("user not found")
+		return nil, err
 	}
 
 	return user, nil
+}
+
+func FindUserByUserID(userID uuid.UUID) (*models.MsUser, error) {
+	user := &models.MsUser{}
+
+	var query = database.DB.
+		Model(&models.MsUser{}).
+		Where("user_id = ?", userID).
+		First(user)
+
+	// Find the user in the database by email
+	if err := query.Error; err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func GetAllUsers() (*[]schemas.UserResponse, error) {
+	users := new([]schemas.UserResponse)
+
+	query := database.DB.
+		Table("ms_users AS a").
+		Select(`
+			a.user_id,
+			a.email,
+			a.name,
+			a.user_approval_status_id,
+			b.user_approval_status_name,
+			a.approved_at
+		`).
+		Joins("LEFT JOIN ms_user_approval_statuses AS b ON a.user_approval_status_id = b.user_approval_status_id").
+		Scan(users)
+
+	if err := query.Error; err != nil {
+		return nil, err
+	}
+
+	return users, nil
 }
 
 func CreateUser(input *schemas.UserRequest) error {
@@ -59,32 +98,8 @@ func CreateUser(input *schemas.UserRequest) error {
 }
 
 func IsUserDataChanged(user *models.MsUser, input *schemas.UserRequest) bool {
-	return user.Email != input.Email || user.Name != input.Name
-}
-
-func InsertHistoryUser(user *models.MsUser) error {
-	historyUser := models.HMsUser{
-		BaseModel: models.BaseModel{
-			UserIn:    user.UserIn,
-			UserUp:    user.UserUp,
-			DateIn:    user.DateIn,
-			DateUp:    user.DateUp,
-			IsDeleted: user.IsDeleted,
-		},
-		HUserID:              uuid.New(),
-		UserID:               user.UserID,
-		GoogleID:             user.GoogleID,
-		Email:                user.Email,
-		Name:                 user.Name,
-		UserApprovalStatusID: user.UserApprovalStatusID,
-		ApprovedAt:           user.ApprovedAt,
-	}
-
-	if err := database.DB.Create(&historyUser).Error; err != nil {
-		return fmt.Errorf("error inserting history user: %v", err)
-	}
-
-	return nil
+	return strings.TrimSpace(user.Email) != strings.TrimSpace(input.Email) ||
+		strings.TrimSpace(user.Name) != strings.TrimSpace(input.Name)
 }
 
 func UpdateUser(user *models.MsUser, input *schemas.UserRequest) error {
@@ -106,41 +121,4 @@ func UpdateUser(user *models.MsUser, input *schemas.UserRequest) error {
 	}
 
 	return nil
-}
-
-func AuthenticateUser(input *schemas.UserRequest) (*schemas.AuthResponse, error) {
-	user, err := FindUser(input.GoogleID)
-	if err != nil {
-		if err := CreateUser(input); err != nil {
-			return nil, err
-		}
-
-		return &schemas.AuthResponse{Message: "Account successfully created. Please wait for approval."}, nil
-	}
-
-	if IsUserDataChanged(user, input) {
-		if err := UpdateUser(user, input); err != nil {
-			return nil, err
-		}
-	}
-
-	approvalStatus, err := GetUserApprovalStatusByID(user.UserApprovalStatusID)
-	if err != nil {
-		return nil, err
-	}
-
-	if approvalStatus == "Waiting For Approval" {
-		return &schemas.AuthResponse{Message: "Your account has not been approved yet. Please wait for approval."}, nil
-	}
-
-	if approvalStatus == "Rejected" {
-		return &schemas.AuthResponse{Message: "Your account has been rejected."}, nil
-	}
-
-	token, err := utils.GenerateJWT(user.UserID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate token")
-	}
-
-	return &schemas.AuthResponse{Token: token}, nil
 }

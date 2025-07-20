@@ -38,8 +38,8 @@ services:
     image: "fintrace-api:latest"
     ports:
       - ${API_PORT}:${API_PORT_INTERNAL}
-    environment:
-      <<: *common-gin-app-environment-variables
+    env_file:
+      - .env
     build:
       context: ./backend
       dockerfile: Dockerfile

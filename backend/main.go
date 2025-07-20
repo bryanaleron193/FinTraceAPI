@@ -1,6 +1,7 @@
 package main
 
 import (
+	"simple-gin-backend/internal/cache"
 	"simple-gin-backend/internal/config"
 	"simple-gin-backend/internal/database"
 	"simple-gin-backend/internal/routes"
@@ -21,6 +22,9 @@ func main() {
 
 	// Initialize the database
 	database.InitDB()
+
+	// ✅ Initialize Redis
+	cache.InitRedis()
 
 	r := gin.Default()
 

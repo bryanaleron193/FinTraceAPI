@@ -28,11 +28,8 @@ func RegisterRoutes(router *gin.Engine) {
 	api := router.Group("")
 	api.Use(middleware.JWTAuthMiddleware())
 	{
-		// CRUD Routes for items
-		// api.POST("/items", controllers.CreateItem)
-		// api.GET("/items/:id", controllers.GetItem)
-		// api.PUT("/items/:id", controllers.UpdateItem)
-		// api.DELETE("/items/:id", controllers.DeleteItem)
-		// api.GET("/items", controllers.GetItems)
+		api.GET("/user-approval/get-all-statuses", controllers.GetAllUserApprovalStatuses)
+		api.GET("/user/get-all-users", controllers.GetAllUsers)
+		api.PUT("/user-approval/update-status", controllers.UpdateUserApprovalStatus)
 	}
 }

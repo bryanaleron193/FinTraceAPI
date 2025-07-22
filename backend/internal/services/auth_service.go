@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func AuthenticateUser(input *schemas.UserRequest) (*schemas.AuthResponse, error) {
+func AuthenticateUser(input *schemas.AuthRequest) (*schemas.AuthResponse, error) {
 	user, err := FindUserByGoogleID(input.GoogleID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

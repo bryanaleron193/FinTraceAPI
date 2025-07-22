@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 func FindUserByGoogleID(googleID string) (*models.MsUser, error) {
@@ -43,11 +44,37 @@ func FindUserByUserID(userID uuid.UUID) (*models.MsUser, error) {
 	return user, nil
 }
 
-func GetAllUsers() (*[]schemas.UserResponse, error) {
-	users := new([]schemas.UserResponse)
+func GetAllUsers(input *schemas.UserRequest) (*[]schemas.UserResponse, *schemas.Pagination, error) {
+	users := []schemas.UserResponse{}
+	pagination := new(schemas.Pagination)
+	pagination.SetPagination(input.Limit, input.Page)
 
-	query := database.DB.
+	// Base query for filtering
+	baseQuery := database.DB.
 		Table("ms_users AS a").
+		Joins("LEFT JOIN ms_user_approval_statuses AS b ON a.user_approval_status_id = b.user_approval_status_id")
+
+	// Apply filters
+	if input.UserApprovalStatusID != uuid.Nil {
+		baseQuery = baseQuery.Where("a.user_approval_status_id = ?", input.UserApprovalStatusID)
+	}
+	if input.Name != "" {
+		baseQuery = baseQuery.Where("a.name ILIKE ?", input.Name+"%")
+	}
+	if input.Email != "" {
+		baseQuery = baseQuery.Where("a.email ILIKE ?", input.Email+"%")
+	}
+
+	// Count total matching records
+	var total int64
+	if err := baseQuery.Session(&gorm.Session{}).Count(&total).Error; err != nil {
+		return nil, nil, err
+	}
+
+	pagination.SetTotalPages(total)
+
+	// Fetch paginated data
+	if err := baseQuery.
 		Select(`
 			a.user_id,
 			a.email,
@@ -56,17 +83,16 @@ func GetAllUsers() (*[]schemas.UserResponse, error) {
 			b.user_approval_status_name,
 			a.approved_at
 		`).
-		Joins("LEFT JOIN ms_user_approval_statuses AS b ON a.user_approval_status_id = b.user_approval_status_id").
-		Scan(users)
-
-	if err := query.Error; err != nil {
-		return nil, err
+		Limit(pagination.Limit).
+		Offset(pagination.Offset).
+		Scan(&users).Error; err != nil {
+		return nil, nil, err
 	}
 
-	return users, nil
+	return &users, pagination, nil
 }
 
-func CreateUser(input *schemas.UserRequest) error {
+func CreateUser(input *schemas.AuthRequest) error {
 	userID := uuid.New()
 
 	userApprovalStatusID, err := GetUserApprovalStatusByName("Waiting For Approval")
@@ -97,12 +123,12 @@ func CreateUser(input *schemas.UserRequest) error {
 	return nil
 }
 
-func IsUserDataChanged(user *models.MsUser, input *schemas.UserRequest) bool {
+func IsUserDataChanged(user *models.MsUser, input *schemas.AuthRequest) bool {
 	return strings.TrimSpace(user.Email) != strings.TrimSpace(input.Email) ||
 		strings.TrimSpace(user.Name) != strings.TrimSpace(input.Name)
 }
 
-func UpdateUser(user *models.MsUser, input *schemas.UserRequest) error {
+func UpdateUser(user *models.MsUser, input *schemas.AuthRequest) error {
 	if err := InsertHistoryUser(user); err != nil {
 		return err
 	}

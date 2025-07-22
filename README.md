@@ -6,7 +6,7 @@ This is a backend application built using the [Gin Web Framework](https://github
 
 1. api - Gin application.
 2. postgresql - PostgreSQL server.
-3. pgadmin - PGAdmin to inspect DB stracture and data.
+3. pgadmin - PGAdmin to inspect DB structure and data.
 4. mailhog - fake SMTP server for mail interception during the development.
 5. stunnel - Proxy to add encryption for mailhog. gomail need activated TLS.
 

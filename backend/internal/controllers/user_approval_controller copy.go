@@ -13,11 +13,18 @@ func GetAllUserApprovalStatuses(c *gin.Context) {
 	res, err := services.GetAllUserApprovalStatuses()
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, schemas.BaseResponse{
+			Code:    http.StatusInternalServerError,
+			Message: err.Error(),
+		})
 		return
 	}
 
-	c.JSON(http.StatusOK, res)
+	c.JSON(http.StatusOK, schemas.BaseResponse{
+		Code:    http.StatusOK,
+		Message: "Success",
+		Data:    res,
+	})
 }
 
 func UpdateUserApprovalStatus(c *gin.Context) {
@@ -26,15 +33,24 @@ func UpdateUserApprovalStatus(c *gin.Context) {
 
 	// Validation
 	// Validate JSON
-	if err := c.BindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input"})
+	if err := c.BindJSON(input); err != nil {
+		c.JSON(http.StatusBadRequest, schemas.BaseResponse{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid input",
+		})
 		return
 	}
 
 	if err := services.UpdateUserApprovalStatus(auditedUserID, input); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, schemas.BaseResponse{
+			Code:    http.StatusInternalServerError,
+			Message: err.Error(),
+		})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "user approval status successfully updated."})
+	c.JSON(http.StatusOK, schemas.BaseResponse{
+		Code:    http.StatusOK,
+		Message: "user approval status successfully updated.",
+	})
 }

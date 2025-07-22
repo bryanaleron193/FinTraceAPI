@@ -5,6 +5,7 @@ import (
 	"simple-gin-backend/internal/database"
 	"simple-gin-backend/internal/models"
 	"simple-gin-backend/internal/schemas"
+
 	"time"
 
 	"github.com/google/uuid"
@@ -52,20 +53,19 @@ func GetUserApprovalStatusByID(statusID uuid.UUID) (string, error) {
 }
 
 func GetAllUserApprovalStatuses() (*[]schemas.UserApprovalResponse, error) {
-	userApprovalStatuses := new([]schemas.UserApprovalResponse)
+	userApprovalStatuses := []schemas.UserApprovalResponse{}
 
-	var query = database.DB.
+	query := database.DB.
 		Model(&models.MsUserApprovalStatus{}).
 		Select("user_approval_status_id, user_approval_status_name").
 		Where("is_deleted = ?", false).
-		Scan(userApprovalStatuses)
+		Scan(&userApprovalStatuses)
 
-	// Find the user in the database by email
 	if err := query.Error; err != nil {
 		return nil, err
 	}
 
-	return userApprovalStatuses, nil
+	return &userApprovalStatuses, nil
 }
 
 func UpdateUserApprovalStatus(auditedUserID uuid.UUID, input *schemas.UserApprovalRequest) error {

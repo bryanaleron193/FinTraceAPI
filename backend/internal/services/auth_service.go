@@ -27,12 +27,12 @@ func AuthenticateUser(input *schemas.AuthRequest) (*schemas.AuthResponse, error)
 	}
 
 	if IsUserDataChanged(user, input) {
-		if err := UpdateUser(user, input); err != nil {
+		if err := UpdateUserProfile(user, input); err != nil {
 			return nil, err
 		}
 	}
 
-	approvalStatus, err := GetUserApprovalStatusByID(user.UserApprovalStatusID)
+	approvalStatus, err := GetUserStatusByID(user.UserStatusID)
 	if err != nil {
 		return nil, err
 	}

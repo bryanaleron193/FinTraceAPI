@@ -5,9 +5,9 @@ import (
 )
 
 type UserRequest struct {
-	Email                string    `json:"email"`
-	Name                 string    `json:"name"`
-	UserApprovalStatusID uuid.UUID `json:"user_approval_status_id"`
-	Limit                int       `json:"limit"`
-	Page                 int       `json:"page"`
+	Email        string    `json:"email"`
+	Name         string    `json:"name"`
+	UserStatusID uuid.UUID `json:"user_member_status_id"`
+	Limit        int       `json:"limit"`
+	Page         int       `json:"page"`
 }

@@ -28,8 +28,8 @@ func RegisterRoutes(router *gin.Engine) {
 	api := router.Group("")
 	api.Use(middleware.JWTAuthMiddleware())
 	{
-		api.GET("/user-approval/get-all-statuses", controllers.GetAllUserApprovalStatuses)
+		api.GET("/user/get-all-statuses", controllers.GetAllUserStatuses)
 		api.GET("/user/get-all-users", controllers.GetAllUsers)
-		api.PUT("/user-approval/update-status", controllers.UpdateUserApprovalStatus)
+		api.PUT("/user/update-status", controllers.UpdateUserStatus)
 	}
 }

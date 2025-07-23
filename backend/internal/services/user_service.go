@@ -12,11 +12,11 @@ import (
 	"gorm.io/gorm"
 )
 
-func FindUserByGoogleID(googleID string) (*models.MsUser, error) {
-	user := &models.MsUser{}
+func FindUserByGoogleID(googleID string) (*models.MsUsers, error) {
+	user := &models.MsUsers{}
 
 	var query = database.DB.
-		Model(&models.MsUser{}).
+		Model(&models.MsUsers{}).
 		Where("google_id = ?", googleID).
 		First(user)
 
@@ -28,11 +28,11 @@ func FindUserByGoogleID(googleID string) (*models.MsUser, error) {
 	return user, nil
 }
 
-func FindUserByUserID(userID uuid.UUID) (*models.MsUser, error) {
-	user := &models.MsUser{}
+func FindUserByUserID(userID uuid.UUID) (*models.MsUsers, error) {
+	user := &models.MsUsers{}
 
 	var query = database.DB.
-		Model(&models.MsUser{}).
+		Model(&models.MsUsers{}).
 		Where("user_id = ?", userID).
 		First(user)
 
@@ -52,11 +52,11 @@ func GetAllUsers(input *schemas.UserRequest) (*[]schemas.UserResponse, *schemas.
 	// Base query for filtering
 	baseQuery := database.DB.
 		Table("ms_users AS a").
-		Joins("LEFT JOIN ms_user_approval_statuses AS b ON a.user_approval_status_id = b.user_approval_status_id")
+		Joins("LEFT JOIN ms_user_member_statuses AS b ON a.user_member_status_id = b.user_member_status_id")
 
 	// Apply filters
-	if input.UserApprovalStatusID != uuid.Nil {
-		baseQuery = baseQuery.Where("a.user_approval_status_id = ?", input.UserApprovalStatusID)
+	if input.UserStatusID != uuid.Nil {
+		baseQuery = baseQuery.Where("a.user_member_status_id = ?", input.UserStatusID)
 	}
 	if input.Name != "" {
 		baseQuery = baseQuery.Where("a.name ILIKE ?", input.Name+"%")
@@ -79,8 +79,8 @@ func GetAllUsers(input *schemas.UserRequest) (*[]schemas.UserResponse, *schemas.
 			a.user_id,
 			a.email,
 			a.name,
-			a.user_approval_status_id,
-			b.user_approval_status_name,
+			a.user_member_status_id,
+			b.user_member_status_name,
 			a.approved_at
 		`).
 		Limit(pagination.Limit).
@@ -95,12 +95,12 @@ func GetAllUsers(input *schemas.UserRequest) (*[]schemas.UserResponse, *schemas.
 func CreateUser(input *schemas.AuthRequest) error {
 	userID := uuid.New()
 
-	userApprovalStatusID, err := GetUserApprovalStatusByName("Waiting For Approval")
+	userApprovalStatusID, err := GetUserStatusByName("Waiting For Approval")
 	if err != nil {
 		return err
 	}
 
-	newUser := models.MsUser{
+	newUser := models.MsUsers{
 		BaseModel: models.BaseModel{
 			UserIn:    userID,
 			UserUp:    nil,
@@ -108,12 +108,12 @@ func CreateUser(input *schemas.AuthRequest) error {
 			DateUp:    nil,
 			IsDeleted: false,
 		},
-		UserID:               userID,
-		GoogleID:             input.GoogleID,
-		Email:                input.Email,
-		Name:                 input.Name,
-		UserApprovalStatusID: userApprovalStatusID,
-		ApprovedAt:           nil,
+		UserID:       userID,
+		GoogleID:     input.GoogleID,
+		Email:        input.Email,
+		Name:         input.Name,
+		UserStatusID: userApprovalStatusID,
+		ApprovedAt:   nil,
 	}
 
 	if err := database.DB.Create(&newUser).Error; err != nil {
@@ -123,17 +123,17 @@ func CreateUser(input *schemas.AuthRequest) error {
 	return nil
 }
 
-func IsUserDataChanged(user *models.MsUser, input *schemas.AuthRequest) bool {
+func IsUserDataChanged(user *models.MsUsers, input *schemas.AuthRequest) bool {
 	return strings.TrimSpace(user.Email) != strings.TrimSpace(input.Email) ||
 		strings.TrimSpace(user.Name) != strings.TrimSpace(input.Name)
 }
 
-func UpdateUser(user *models.MsUser, input *schemas.AuthRequest) error {
+func UpdateUserProfile(user *models.MsUsers, input *schemas.AuthRequest) error {
 	if err := InsertHistoryUser(user); err != nil {
 		return err
 	}
 
-	query := database.DB.Model(&models.MsUser{}).
+	query := database.DB.Model(&models.MsUsers{}).
 		Where("user_id = ?", user.UserID).
 		Updates(map[string]interface{}{
 			"user_up": user.UserID,
@@ -144,6 +144,46 @@ func UpdateUser(user *models.MsUser, input *schemas.AuthRequest) error {
 
 	if err := query.Error; err != nil {
 		return fmt.Errorf("error updating user: %v", err)
+	}
+
+	return nil
+}
+
+func UpdateUserStatus(auditedUserID uuid.UUID, input *schemas.UserStatusRequest) error {
+	existingUser, err := FindUserByUserID(input.UserID)
+	if err != nil {
+		return fmt.Errorf("error finding user: %v", err)
+	}
+
+	err = InsertHistoryUser(existingUser)
+	if err != nil {
+		return fmt.Errorf("error inserting history user: %v", err)
+	}
+
+	userApprovalStatusName, err := GetUserStatusByID(input.UserStatusID)
+	if err != nil {
+		return fmt.Errorf("error getting user approval status by ID: %v", err)
+	}
+
+	timeNow := time.Now()
+	var approvedAt *time.Time
+	if userApprovalStatusName == "Approved" {
+		approvedAt = &timeNow
+	} else {
+		approvedAt = nil
+	}
+
+	query := database.DB.Model(&models.MsUsers{}).
+		Where("user_id = ?", input.UserID).
+		Updates(map[string]interface{}{
+			"user_up":               auditedUserID,
+			"date_up":               timeNow,
+			"user_member_status_id": input.UserStatusID,
+			"approved_at":           approvedAt,
+		})
+
+	if err := query.Error; err != nil {
+		return fmt.Errorf("error updating user approval status: %v", err)
 	}
 
 	return nil

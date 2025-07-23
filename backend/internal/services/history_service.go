@@ -8,8 +8,8 @@ import (
 	"github.com/google/uuid"
 )
 
-func InsertHistoryUser(user *models.MsUser) error {
-	historyUser := models.HMsUser{
+func InsertHistoryUser(user *models.MsUsers) error {
+	historyUser := models.HMsUsers{
 		BaseModel: models.BaseModel{
 			UserIn:    user.UserIn,
 			UserUp:    user.UserUp,
@@ -17,13 +17,13 @@ func InsertHistoryUser(user *models.MsUser) error {
 			DateUp:    user.DateUp,
 			IsDeleted: user.IsDeleted,
 		},
-		HUserID:              uuid.New(),
-		UserID:               user.UserID,
-		GoogleID:             user.GoogleID,
-		Email:                user.Email,
-		Name:                 user.Name,
-		UserApprovalStatusID: user.UserApprovalStatusID,
-		ApprovedAt:           user.ApprovedAt,
+		HUserID:      uuid.New(),
+		UserID:       user.UserID,
+		GoogleID:     user.GoogleID,
+		Email:        user.Email,
+		Name:         user.Name,
+		UserStatusID: user.UserStatusID,
+		ApprovedAt:   user.ApprovedAt,
 	}
 
 	if err := database.DB.Create(&historyUser).Error; err != nil {

@@ -6,12 +6,13 @@ import (
 	"github.com/google/uuid"
 )
 
-type MsUsers struct {
+type HMsUsers struct {
 	BaseModel
 
-	UserID       uuid.UUID  `gorm:"primaryKey;type:uuid" json:"user_id"`
-	GoogleID     string     `gorm:"type:text;unique;not null" json:"google_id"`
-	Email        string     `gorm:"type:text;unique;not null" json:"email"`
+	HUserID      uuid.UUID  `gorm:"primaryKey;type:uuid" json:"h_user_id"`
+	UserID       uuid.UUID  `gorm:"type:uuid;not null" json:"user_id"`
+	GoogleID     string     `gorm:"type:text;not null" json:"google_id"`
+	Email        string     `gorm:"type:text;not null" json:"email"`
 	Name         string     `gorm:"type:text;not null" json:"name"`
 	UserStatusID uuid.UUID  `gorm:"type:uuid;not null" json:"user_status_id"`
 	ApprovedAt   *time.Time `gorm:"type:timestamp with time zone" json:"approved_at"`

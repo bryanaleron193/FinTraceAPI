@@ -58,7 +58,32 @@ func GetAllUsers(c *gin.Context) {
 
 func UpdateUserStatus(c *gin.Context) {
 	input := new(schemas.UserStatusRequest)
-	auditedUserID := c.MustGet("user_id").(uuid.UUID)
+
+	if err := c.ShouldBindJSON(input); err != nil {
+		c.JSON(http.StatusBadRequest, schemas.BaseResponse{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid input",
+		})
+		return
+	}
+
+	userIDVal, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, schemas.BaseResponse{
+			Code:    http.StatusInternalServerError,
+			Message: "User ID is missing",
+		})
+		return
+	}
+
+	auditedUserID, ok := userIDVal.(uuid.UUID)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, schemas.BaseResponse{
+			Code:    http.StatusInternalServerError,
+			Message: "User ID is not a valid UUID",
+		})
+		return
+	}
 
 	// Validation
 	// Validate JSON
@@ -80,6 +105,6 @@ func UpdateUserStatus(c *gin.Context) {
 
 	c.JSON(http.StatusOK, schemas.BaseResponse{
 		Code:    http.StatusOK,
-		Message: "user approval status successfully updated.",
+		Message: "User status successfully updated.",
 	})
 }

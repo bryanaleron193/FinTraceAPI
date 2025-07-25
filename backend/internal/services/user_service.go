@@ -20,7 +20,6 @@ func FindUserByGoogleID(googleID string) (*models.MsUsers, error) {
 		Where("google_id = ?", googleID).
 		First(user)
 
-	// Find the user in the database by email
 	if err := query.Error; err != nil {
 		return nil, err
 	}
@@ -36,7 +35,6 @@ func FindUserByUserID(userID uuid.UUID) (*models.MsUsers, error) {
 		Where("user_id = ?", userID).
 		First(user)
 
-	// Find the user in the database by email
 	if err := query.Error; err != nil {
 		return nil, err
 	}
@@ -44,7 +42,7 @@ func FindUserByUserID(userID uuid.UUID) (*models.MsUsers, error) {
 	return user, nil
 }
 
-func GetAllUsers(input *schemas.UserRequest) (*[]schemas.UserResponse, *schemas.Pagination, error) {
+func GetAllUsers(input *schemas.UserRequest) ([]schemas.UserResponse, *schemas.Pagination, error) {
 	users := []schemas.UserResponse{}
 	pagination := new(schemas.Pagination)
 	pagination.SetPagination(input.Limit, input.Page)
@@ -52,16 +50,16 @@ func GetAllUsers(input *schemas.UserRequest) (*[]schemas.UserResponse, *schemas.
 	// Base query for filtering
 	baseQuery := database.DB.
 		Table("ms_users AS a").
-		Joins("LEFT JOIN ms_user_member_statuses AS b ON a.user_member_status_id = b.user_member_status_id")
+		Joins("LEFT JOIN ms_user_statuses AS b ON a.user_status_id = b.user_status_id")
 
 	// Apply filters
 	if input.UserStatusID != uuid.Nil {
-		baseQuery = baseQuery.Where("a.user_member_status_id = ?", input.UserStatusID)
+		baseQuery = baseQuery.Where("a.user_status_id = ?", input.UserStatusID)
 	}
-	if input.Name != "" {
+	if len(input.Name) == 0 && strings.TrimSpace(input.Name) != "" {
 		baseQuery = baseQuery.Where("a.name ILIKE ?", input.Name+"%")
 	}
-	if input.Email != "" {
+	if len(input.Email) == 0 && strings.TrimSpace(input.Email) != "" {
 		baseQuery = baseQuery.Where("a.email ILIKE ?", input.Email+"%")
 	}
 
@@ -79,8 +77,8 @@ func GetAllUsers(input *schemas.UserRequest) (*[]schemas.UserResponse, *schemas.
 			a.user_id,
 			a.email,
 			a.name,
-			a.user_member_status_id,
-			b.user_member_status_name,
+			a.user_status_id,
+			b.user_status_name,
 			a.approved_at
 		`).
 		Limit(pagination.Limit).
@@ -89,7 +87,7 @@ func GetAllUsers(input *schemas.UserRequest) (*[]schemas.UserResponse, *schemas.
 		return nil, nil, err
 	}
 
-	return &users, pagination, nil
+	return users, pagination, nil
 }
 
 func CreateUser(input *schemas.AuthRequest) error {
@@ -162,7 +160,7 @@ func UpdateUserStatus(auditedUserID uuid.UUID, input *schemas.UserStatusRequest)
 
 	userApprovalStatusName, err := GetUserStatusByID(input.UserStatusID)
 	if err != nil {
-		return fmt.Errorf("error getting user approval status by ID: %v", err)
+		return fmt.Errorf("error getting user status by ID: %v", err)
 	}
 
 	timeNow := time.Now()
@@ -176,14 +174,14 @@ func UpdateUserStatus(auditedUserID uuid.UUID, input *schemas.UserStatusRequest)
 	query := database.DB.Model(&models.MsUsers{}).
 		Where("user_id = ?", input.UserID).
 		Updates(map[string]interface{}{
-			"user_up":               auditedUserID,
-			"date_up":               timeNow,
-			"user_member_status_id": input.UserStatusID,
-			"approved_at":           approvedAt,
+			"user_up":        auditedUserID,
+			"date_up":        timeNow,
+			"user_status_id": input.UserStatusID,
+			"approved_at":    approvedAt,
 		})
 
 	if err := query.Error; err != nil {
-		return fmt.Errorf("error updating user approval status: %v", err)
+		return fmt.Errorf("error updating user status: %v", err)
 	}
 
 	return nil

@@ -28,8 +28,15 @@ func RegisterRoutes(router *gin.Engine) {
 	api := router.Group("")
 	api.Use(middleware.JWTAuthMiddleware())
 	{
-		api.GET("/user/get-all-statuses", controllers.GetAllUserStatuses)
-		api.GET("/user/get-all-users", controllers.GetAllUsers)
-		api.PUT("/user/update-status", controllers.UpdateUserStatus)
+		api.GET("/users/get-all-statuses", controllers.GetAllUserStatuses)
+		api.GET("/users/get-all-users", controllers.GetAllUsers)
+		api.PUT("/users/update-status", controllers.UpdateUserStatus)
+
+		api.GET("/groups/joined", controllers.GetAllGroupsByUserId)
+		api.GET("/groups/not-joined", controllers.GetAllGroupsNotJoined)
+		api.POST("/groups/create", controllers.CreateGroup)
+		api.PUT("/groups/update", controllers.UpdateGroup)
+		api.DELETE("/groups/delete", controllers.DisbandGroup)
+		api.POST("/groups/request-join", controllers.RequestJoinGroup)
 	}
 }

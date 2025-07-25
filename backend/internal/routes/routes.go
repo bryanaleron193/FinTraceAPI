@@ -38,5 +38,11 @@ func RegisterRoutes(router *gin.Engine) {
 		api.PUT("/groups/update", controllers.UpdateGroup)
 		api.DELETE("/groups/delete", controllers.DisbandGroup)
 		api.POST("/groups/request-join", controllers.RequestJoinGroup)
+
+		api.GET("/group-members/get-all-roles", controllers.GetAllGroupRoles)
+		api.GET("/group-members/get-all-member-statuses", controllers.GetAllGroupMemberStatuses)
+		api.GET("/group-members/get-all-members", controllers.GetAllMembers)
+		api.PUT("/group-members/update-role", controllers.UpdateGroupRole)
+		api.PUT("/group-members/update-member-status", controllers.UpdateGroupMemberStatus)
 	}
 }

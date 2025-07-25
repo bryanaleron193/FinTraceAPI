@@ -33,18 +33,18 @@ func InsertHistoryUser(user *models.MsUsers) error {
 	return nil
 }
 
-func InsertHistoryGroup(user *models.TrGroups) error {
+func InsertHistoryGroup(group *models.TrGroups) error {
 	historyGroup := models.HTrGroups{
 		BaseModel: models.BaseModel{
-			UserIn:    user.UserIn,
-			UserUp:    user.UserUp,
-			DateIn:    user.DateIn,
-			DateUp:    user.DateUp,
-			IsDeleted: user.IsDeleted,
+			UserIn:    group.UserIn,
+			UserUp:    group.UserUp,
+			DateIn:    group.DateIn,
+			DateUp:    group.DateUp,
+			IsDeleted: group.IsDeleted,
 		},
 		HGroupID:  uuid.New(),
-		GroupID:   user.GroupID,
-		GroupName: user.GroupName,
+		GroupID:   group.GroupID,
+		GroupName: group.GroupName,
 	}
 
 	if err := database.DB.Create(&historyGroup).Error; err != nil {
@@ -54,11 +54,36 @@ func InsertHistoryGroup(user *models.TrGroups) error {
 	return nil
 }
 
+func InsertHistoryGroupMember(member *models.TrGroupMembers) error {
+	historyGroupMember := models.HTrGroupMembers{
+		BaseModel: models.BaseModel{
+			UserIn:    member.UserIn,
+			UserUp:    member.UserUp,
+			DateIn:    member.DateIn,
+			DateUp:    member.DateUp,
+			IsDeleted: member.IsDeleted,
+		},
+		HGroupMemberID:      uuid.New(),
+		GroupMemberID:       member.GroupMemberID,
+		GroupID:             member.GroupID,
+		UserID:              member.UserID,
+		GroupRoleID:         member.GroupRoleID,
+		GroupMemberStatusID: member.GroupMemberStatusID,
+		ApprovedAt:          member.ApprovedAt,
+	}
+
+	if err := database.DB.Create(&historyGroupMember).Error; err != nil {
+		return fmt.Errorf("error inserting history group member: %v", err)
+	}
+
+	return nil
+}
+
 func InsertHistoryGroupMembers(members []models.TrGroupMembers) error {
-	var historyGroups []models.HTrGroupMembers
+	var historyGroupMembers []models.HTrGroupMembers
 
 	for _, user := range members {
-		historyGroups = append(historyGroups, models.HTrGroupMembers{
+		historyGroupMembers = append(historyGroupMembers, models.HTrGroupMembers{
 			BaseModel: models.BaseModel{
 				UserIn:    user.UserIn,
 				UserUp:    user.UserUp,
@@ -76,7 +101,7 @@ func InsertHistoryGroupMembers(members []models.TrGroupMembers) error {
 		})
 	}
 
-	if err := database.DB.Create(&historyGroups).Error; err != nil {
+	if err := database.DB.Create(&historyGroupMembers).Error; err != nil {
 		return fmt.Errorf("error inserting history group members: %v", err)
 	}
 

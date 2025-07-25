@@ -32,6 +32,8 @@ func GetAllGroupsByUserId(auditedUserID uuid.UUID, input *schemas.GroupRequest) 
 	pagination := new(schemas.Pagination)
 	pagination.SetPagination(input.Limit, input.Page)
 
+	input.GroupName = strings.TrimSpace(input.GroupName)
+
 	// Base query for filtering
 	baseQuery := database.DB.
 		Table("tr_groups AS a").
@@ -40,13 +42,14 @@ func GetAllGroupsByUserId(auditedUserID uuid.UUID, input *schemas.GroupRequest) 
 		Joins("JOIN ms_group_member_statuses AS d ON b.group_member_status_id = d.group_member_status_id AND d.is_deleted = FALSE").
 		Where("b.user_id = ? AND a.is_deleted = ?", auditedUserID, false)
 
-	if len(input.GroupName) == 0 && strings.TrimSpace(input.GroupName) != "" {
+	if input.GroupName != "" {
 		baseQuery = baseQuery.Where("a.group_name ILIKE ?", input.GroupName+"%")
 	}
 
 	// Count total matching records
 	var total int64
-	if err := baseQuery.Session(&gorm.Session{}).Count(&total).Error; err != nil {
+	countQuery := baseQuery.Session(&gorm.Session{})
+	if err := countQuery.Count(&total).Error; err != nil {
 		return nil, nil, err
 	}
 
@@ -77,6 +80,8 @@ func GetAllGroupsNotJoined(auditedUserID uuid.UUID, input *schemas.GroupRequest)
 	pagination := new(schemas.Pagination)
 	pagination.SetPagination(input.Limit, input.Page)
 
+	input.GroupName = strings.TrimSpace(input.GroupName)
+
 	// Base query for filtering
 	baseQuery := database.DB.
 		Table("tr_groups AS a").
@@ -86,13 +91,14 @@ func GetAllGroupsNotJoined(auditedUserID uuid.UUID, input *schemas.GroupRequest)
 			"WHERE a.group_id = b.group_id AND b.user_id = ? AND b.is_deleted = FALSE"+
 			")", auditedUserID)
 
-	if len(input.GroupName) == 0 && strings.TrimSpace(input.GroupName) != "" {
+	if input.GroupName != "" {
 		baseQuery = baseQuery.Where("a.group_name ILIKE ?", input.GroupName+"%")
 	}
 
 	// Count total matching records
 	var total int64
-	if err := baseQuery.Session(&gorm.Session{}).Count(&total).Error; err != nil {
+	countQuery := baseQuery.Session(&gorm.Session{})
+	if err := countQuery.Count(&total).Error; err != nil {
 		return nil, nil, err
 	}
 

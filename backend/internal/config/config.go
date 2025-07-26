@@ -1,9 +1,7 @@
 package config
 
 import (
-	"log"
 	"os"
-	"strconv"
 )
 
 type Config struct {
@@ -13,15 +11,18 @@ type Config struct {
 	PostgresHost     string
 	PostgresUser     string
 	PostgresPassword string
-	PostgresDb        string
+	PostgresDb       string
 	PostgresPort     string
 
-	SMTPHost       string
-	SMTPPort       int
-	SMTPUser       string
-	SMTPPassword   string
-	EmailFromEmail string
-	UseMailTLS     bool
+	RedisAddr     string
+	RedisPassword string
+	RedisDB       string
+
+	ResendAPIKey    string
+	ResendFromName  string
+	ResendFromEmail string
+
+	AdminEmail string
 }
 
 // AppConfig holds the global configuration accessible by the entire application
@@ -40,21 +41,13 @@ func LoadConfig() {
 	AppConfig.PostgresDb = os.Getenv("POSTGRES_DB")
 	AppConfig.PostgresPort = os.Getenv("POSTGRES_PORT")
 
-	AppConfig.SMTPHost = os.Getenv("SMTP_HOST")
-	AppConfig.SMTPUser = os.Getenv("SMTP_USER")
-	AppConfig.SMTPPassword = os.Getenv("SMTP_PASSWORD")
-	AppConfig.EmailFromEmail = os.Getenv("EMAILS_FROM_EMAIL")
+	AppConfig.RedisAddr = os.Getenv("REDIS_ADDR")
+	AppConfig.RedisPassword = os.Getenv("REDIS_PASSWORD")
+	AppConfig.RedisDB = os.Getenv("REDIS_DB")
 
-	port, err := strconv.Atoi(os.Getenv("SMTP_PORT"))
-	if err != nil {
-		log.Fatalf("Error parsing SMTP_PORT: %v", err)
-	}
-	AppConfig.SMTPPort = port
+	AppConfig.ResendAPIKey = os.Getenv("RESEND_API_KEY")
+	AppConfig.ResendFromName = os.Getenv("RESEND_FROM_NAME")
+	AppConfig.ResendFromEmail = os.Getenv("RESEND_FROM_EMAIL")
 
-	// Convert MAIL_TLS to a boolean value
-	tlsEnabled, err := strconv.ParseBool(os.Getenv("MAIL_TLS"))
-	if err != nil {
-		tlsEnabled = true // Default safe value
-	}
-	AppConfig.UseMailTLS = tlsEnabled
+	AppConfig.AdminEmail = os.Getenv("ADMIN_EMAIL")
 }

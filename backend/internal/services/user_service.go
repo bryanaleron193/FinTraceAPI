@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"log"
 	"simple-gin-backend/internal/database"
 	"simple-gin-backend/internal/models"
 	"simple-gin-backend/internal/schemas"
@@ -93,7 +94,7 @@ func GetAllUsers(input *schemas.UserRequest) ([]schemas.UserResponse, *schemas.P
 func CreateUser(input *schemas.AuthRequest) error {
 	userID := uuid.New()
 
-	userApprovalStatusID, err := GetUserStatusByName("Waiting For Approval")
+	userApprovalStatusID, err := GetUserStatusByName("Pending")
 	if err != nil {
 		return err
 	}
@@ -182,6 +183,12 @@ func UpdateUserStatus(auditedUserID uuid.UUID, input *schemas.UserStatusRequest)
 
 	if err := query.Error; err != nil {
 		return fmt.Errorf("error updating user status: %v", err)
+	}
+
+	err = SendEmail([]string{existingUser.Email}, "Account Status Updated", fmt.Sprintf("Your account status has been updated to: %s", userApprovalStatusName))
+	if err != nil {
+		log.Printf("Failed to send email: %v", err)
+		return fmt.Errorf("failed to send email notification")
 	}
 
 	return nil

@@ -18,10 +18,6 @@ func RegisterRoutes(router *gin.Engine) {
 	docs.SwaggerInfo.BasePath = "/"
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
-	// Hello world routes
-	router.GET("/", controllers.GetHelloWorld)
-	router.POST("/send-test-email", controllers.PostSendEmail)
-
 	router.POST("/login", controllers.LoginUser)
 
 	// Protected routes (Require authentication)

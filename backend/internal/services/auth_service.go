@@ -20,6 +20,12 @@ func AuthenticateUser(input *schemas.AuthRequest) (*schemas.AuthResponse, error)
 				return nil, err
 			}
 
+			err := SendEmail([]string{input.Email}, "Account Created", "Your account has been successfully created. Please wait for approval.")
+
+			if err != nil {
+				return nil, fmt.Errorf("failed to send email notification: %v", err)
+			}
+
 			return &schemas.AuthResponse{Message: "Account successfully created. Please wait for approval."}, nil
 		}
 
@@ -37,12 +43,16 @@ func AuthenticateUser(input *schemas.AuthRequest) (*schemas.AuthResponse, error)
 		return nil, err
 	}
 
-	if approvalStatus == "Waiting For Approval" {
+	if approvalStatus == "Pending" {
 		return &schemas.AuthResponse{Message: "Your account has not been approved yet. Please wait for approval."}, nil
 	}
 
 	if approvalStatus == "Rejected" {
 		return &schemas.AuthResponse{Message: "Your account has been rejected."}, nil
+	}
+
+	if approvalStatus == "Removed" {
+		return &schemas.AuthResponse{Message: "Your account has been removed."}, nil
 	}
 
 	token, err := utils.GenerateJWT(user.UserID)

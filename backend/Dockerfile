@@ -1,7 +1,10 @@
 # Use an official Golang runtime as a parent image
-FROM golang:1.22-alpine
+FROM golang:1.24.5-bookworm
 
-RUN apk add --no-cache git make musl-dev go
+RUN apt-get update && apt-get install -y \
+  git \
+  make \
+  musl-dev
 
 # Install air for hot-reloading
 RUN go install github.com/air-verse/air@v1.52.3

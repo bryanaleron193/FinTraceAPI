@@ -3,7 +3,7 @@ package cache
 import (
 	"context"
 	"log"
-	"os"
+	"simple-gin-backend/internal/config"
 	"strconv"
 
 	"github.com/redis/go-redis/v9"
@@ -18,8 +18,8 @@ func InitRedis() {
 	dbIndex := getRedisDB()
 
 	RedisClient = redis.NewClient(&redis.Options{
-		Addr:     os.Getenv("REDIS_ADDR"),
-		Password: os.Getenv("REDIS_PASSWORD"),
+		Addr:     config.AppConfig.RedisAddr,
+		Password: config.AppConfig.RedisPassword,
 		DB:       dbIndex,
 	})
 
@@ -32,7 +32,7 @@ func InitRedis() {
 }
 
 func getRedisDB() int {
-	dbIndex, err := strconv.Atoi(os.Getenv("REDIS_DB"))
+	dbIndex, err := strconv.Atoi(config.AppConfig.RedisDB)
 	if err != nil {
 		return 0
 	}

@@ -35,8 +35,6 @@ Once started, the following services are available:
 
 1. http://localhost:8083/ - Backend
 2. http://localhost:8083/swagger/index.html - API Documentation Swagger
-3. http://localhost:8085/ - MailHog
-4. http://localhost:8086/ - PGAdmin4
 
 Attention. Documentation Swagger is not generated automatically. You need generate it when annotations are updated (see command below in "Useful commands")
 

@@ -40,5 +40,12 @@ func RegisterRoutes(router *gin.Engine) {
 		api.GET("/group-members/get-all-members", controllers.GetAllMembers)
 		api.PUT("/group-members/update-role", controllers.UpdateGroupRole)
 		api.PUT("/group-members/update-member-status", controllers.UpdateGroupMemberStatus)
+
+		api.GET("/transaction-categories/get-list", controllers.GetAllTransactionCategories)
+
+		api.GET("/transactions/get-borrow-list", controllers.GetAllBorrowTransactions)
+		api.GET("/transactions/get-lend-list", controllers.GetAllBorrowTransactions)
+		api.GET("/transactions/get-detail-by-id", controllers.GetTransactionDetailById)
+		api.GET("/transactions/get-borrower-total-by-transaction", controllers.GetBorrowersTotalByTransaction)
 	}
 }

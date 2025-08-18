@@ -47,5 +47,8 @@ func RegisterRoutes(router *gin.Engine) {
 		api.GET("/transactions/get-lend-list", controllers.GetAllBorrowTransactions)
 		api.GET("/transactions/get-detail-by-id", controllers.GetTransactionDetailById)
 		api.GET("/transactions/get-borrower-total-by-transaction", controllers.GetBorrowersTotalByTransaction)
+		api.POST("/transactions/create", controllers.CreateTransaction)
+		api.PUT("/transactions/update", controllers.UpdateTransaction)
+		api.DELETE("/transactions/delete", controllers.DeleteTransaction)
 	}
 }

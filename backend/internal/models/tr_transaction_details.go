@@ -16,6 +16,6 @@ type TrTransactionDetails struct {
 	DetailName          string     `gorm:"type:text;not null" json:"detail_name"`
 	Amount              float64    `gorm:"type:numeric(12,2);not null" json:"amount"`
 	Quantity            int        `gorm:"type:int;not null;default:1;check:quantity > 0"`
-	IsPaid              bool       `gorm:"type:;not null" json:"is_paid"`
+	IsPaid              bool       `gorm:"type:boolean;not null" json:"is_paid"`
 	PaidAt              *time.Time `gorm:"type:timestamp with time zone" json:"paid_at"`
 }

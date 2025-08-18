@@ -16,4 +16,5 @@ type HTrTransactionHeaders struct {
 	LenderName            string    `gorm:"type:text" json:"lender_name"`
 	TransactionName       string    `gorm:"type:text;not null" json:"transaction_name"`
 	TransactionDate       time.Time `gorm:"type:timestamp with time zone;not null" json:"transaction_date"`
+	IsRoundDown           bool      `gorm:"type:boolean;not null" json:"is_round_down"`
 }

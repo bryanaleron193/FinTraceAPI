@@ -107,3 +107,88 @@ func InsertHistoryGroupMembers(members []models.TrGroupMembers) error {
 
 	return nil
 }
+
+func InsertHistoryTransactionHeader(header *models.TrTransactionHeaders) error {
+	historyTransactionHeader := models.HTrTransactionHeaders{
+		BaseModel: models.BaseModel{
+			UserIn:    header.UserIn,
+			UserUp:    header.UserUp,
+			DateIn:    header.DateIn,
+			DateUp:    header.DateUp,
+			IsDeleted: header.IsDeleted,
+		},
+		HTransactionHeaderID:  uuid.New(),
+		TransactionHeaderID:   header.TransactionHeaderID,
+		TransactionCategoryID: header.TransactionCategoryID,
+		LenderID:              header.LenderID,
+		LenderName:            header.LenderName,
+		TransactionName:       header.TransactionName,
+		TransactionDate:       header.TransactionDate,
+		IsRoundDown:           header.IsRoundDown,
+	}
+
+	if err := database.DB.Create(&historyTransactionHeader).Error; err != nil {
+		return fmt.Errorf("error inserting history transaction header: %v", err)
+	}
+
+	return nil
+}
+
+func InsertHistoryTransactionDetails(details []models.TrTransactionDetails) error {
+	var historyTransactionDetails []models.HTrTransactionDetails
+
+	for _, detail := range details {
+		historyTransactionDetails = append(historyTransactionDetails, models.HTrTransactionDetails{
+			BaseModel: models.BaseModel{
+				UserIn:    detail.UserIn,
+				UserUp:    detail.UserUp,
+				DateIn:    detail.DateIn,
+				DateUp:    detail.DateUp,
+				IsDeleted: detail.IsDeleted,
+			},
+			HTransactionDetailID: uuid.New(),
+			TransactionDetailID:  detail.TransactionDetailID,
+			TransactionHeaderID:  detail.TransactionHeaderID,
+			BorrowerID:           detail.BorrowerID,
+			BorrowerName:         detail.BorrowerName,
+			DetailName:           detail.DetailName,
+			Amount:               detail.Amount,
+			Quantity:             detail.Quantity,
+			IsPaid:               detail.IsPaid,
+			PaidAt:               detail.PaidAt,
+		})
+	}
+
+	if err := database.DB.Create(&historyTransactionDetails).Error; err != nil {
+		return fmt.Errorf("error inserting history transaction details: %v", err)
+	}
+
+	return nil
+}
+
+func InsertHistoryTransactionAdjustments(adjustments []models.TrTransactionAdjustments) error {
+	var historyTransactionAdjustments []models.HTrTransactionAdjustments
+
+	for _, adjustment := range adjustments {
+		historyTransactionAdjustments = append(historyTransactionAdjustments, models.HTrTransactionAdjustments{
+			BaseModel: models.BaseModel{
+				UserIn:    adjustment.UserIn,
+				UserUp:    adjustment.UserUp,
+				DateIn:    adjustment.DateIn,
+				DateUp:    adjustment.DateUp,
+				IsDeleted: adjustment.IsDeleted,
+			},
+			HTransactionAdjustmentID: uuid.New(),
+			TransactionAdjustmentID:  adjustment.TransactionAdjustmentID,
+			TransactionHeaderID:      adjustment.TransactionHeaderID,
+			AdjustmentName:           adjustment.AdjustmentName,
+			AdjustmentAmount:         adjustment.AdjustmentAmount,
+		})
+	}
+
+	if err := database.DB.Create(&historyTransactionAdjustments).Error; err != nil {
+		return fmt.Errorf("error inserting history transaction adjustments: %v", err)
+	}
+
+	return nil
+}
